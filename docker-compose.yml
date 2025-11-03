@@ -7,7 +7,7 @@ services:
     container_name: php-httpd-tcp
     restart: unless-stopped
     env_file:
-      - ./env/.env
+      - env/.env
     volumes:
       - ./public:/var/www/html
       - ./config/php/php.ini:/usr/local/etc/php/conf.d/local.ini:ro
@@ -20,7 +20,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # Apache Web Server
+  # Веб-сервер Apache
   httpd-tcp:
     image: httpd:2.4-alpine
     container_name: httpd-tcp
@@ -28,8 +28,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./public:/var/www/html/
-      - ./config/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./public:/var/www/html
+      - ./config/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
     networks:
       - php-httpd-tcp-network
     healthcheck:
@@ -42,13 +42,13 @@ services:
       php-httpd-tcp:
         condition: service_healthy
 
-  # MySQL Database
+  # База данных MySQL
   mysql-httpd-tcp:
     image: mysql:8.4
     container_name: mysql-httpd-tcp
     restart: unless-stopped
     env_file:
-      - ./env/.env
+      - env/.env
     ports:
       - "3306:3306"
     volumes:
@@ -63,12 +63,12 @@ services:
       start_period: 20s
 
     # phpMyAdmin
-  phpmyadmin:
+  phpmyadmin-httpd-tcp:
     image: phpmyadmin
-    container_name: phpmyadmin
+    container_name: phpmyadmin-httpd-tcp
     restart: unless-stopped
     env_file:
-      - ./env/.env
+      - env/.env
     ports:
       - "8080:80"
     depends_on:

@@ -10,7 +10,7 @@
 - PHP-FPM 8.4 (контейнер php-httpd-tcp) — выполняет PHP, порт 9000 (внутренний), Xdebug установлен, управляется переменными окружения.
 - Apache HTTP Server 2.4 (контейнер httpd-tcp) — отдаёт статику и проксирует .php в PHP-FPM; доступен на http://localhost:80.
 - MySQL 8.4 (контейнер mysql-httpd-tcp) — база данных на localhost:3306, данные в именованном томе mysql-data.
-- phpMyAdmin (контейнер phpmyadmin) — веб-интерфейс MySQL на http://localhost:8080.
+- phpMyAdmin (контейнер phpmyadmin-httpd-tcp) — веб-интерфейс MySQL на http://localhost:8080.
 
 Здоровье (healthchecks):
 - PHP-FPM — проверка fastcgi (cgi-fcgi -connect localhost:9000).

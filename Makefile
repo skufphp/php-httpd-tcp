@@ -1,5 +1,5 @@
 # ==========================================
-# PHP-Httpd-TCP Development Environment
+# Среда разработки PHP-Httpd-TCP
 # ==========================================
 # Современная замена XAMPP/MAMP/OpenServer
 # 
@@ -18,7 +18,7 @@
 YELLOW=\033[0;33m
 GREEN=\033[0;32m
 RED=\033[0;31m
-NC=\033[0m # No Color
+NC=\033[0m # Без цвета
 
 # По умолчанию показываем справку
 help: ## Показать справку по командам
@@ -98,7 +98,7 @@ logs-mysql: ## Просмотр логов MySQL
 	docker-compose logs -f mysql-httpd-tcp
 
 logs-phpmyadmin: ## Просмотр логов phpMyAdmin
-	docker-compose logs -f phpmyadmin
+	docker-compose logs -f phpmyadmin-httpd-tcp
 
 status: ## Показать статус контейнеров
 	@echo "$(YELLOW)Статус контейнеров:$(NC)"
