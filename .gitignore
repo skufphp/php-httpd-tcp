@@ -18,7 +18,6 @@ ehthumbs.db
 Thumbs.db
 
 # Docker volumes and data
-mysql-data/
 docker-compose.override.yml
 
 # Logs
@@ -33,10 +32,10 @@ logs/**/*.log
 .temp/
 
 # Project specific files
+vendor/
 public/vendor/
 src/vendor/
 composer.phar
-composer.lock
 
 # PHP specific
 *.cache
