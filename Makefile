@@ -152,7 +152,6 @@ clean-all: ## Полная очистка (контейнеры, образы, �
 	@echo "$(YELLOW)Полная очистка...$(NC)"
 	docker-compose down -v
 	docker-compose down --rmi all
-	docker system prune -f
 	@echo "$(GREEN)✓ Выполнена полная очистка$(NC)"
 
 dev-reset: clean-all build up ## Сброс среды разработки
