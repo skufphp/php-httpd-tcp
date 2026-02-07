@@ -30,7 +30,9 @@ php-httpd-tcp/
 ├── .env                        # Ваши локальные переменные окружения
 ├── docker/
 │   ├── httpd/
-│   │   └── httpd.conf          # Конфиг Apache (проксирование в PHP-FPM)
+│   │   ├── httpd.conf          # Конфиг Apache (проксирование в PHP-FPM)
+│   │   ├── httpd.framework.conf # Альтернативный конфиг (Single Entry Point)
+│   │   └── httpd.proxypass.conf # Legacy-конфиг (ProxyPassMatch)
 │   ├── php/
 │   │   └── php.ini             # Конфиг PHP (dev-настройки + Xdebug через env)
 │   └── php.Dockerfile          # Образ PHP-FPM 8.4 (Alpine) + расширения + Xdebug + Composer
@@ -79,6 +81,10 @@ PHP (docker/php/php.ini):
 Apache (docker/httpd/httpd.conf):
 - mod_proxy_fcgi проксирует .php в php-httpd-tcp:9000
 - AllowOverride None в /var/www/html — .htaccess отключён (для простоты и скорости)
+
+Альтернативные конфиги Apache (docker/httpd/):
+- httpd.framework.conf — режим Single Entry Point для фреймворков
+- httpd.proxypass.conf — legacy-режим через ProxyPassMatch
 
 Docker-образ PHP (docker/php.Dockerfile):
 - База: php:8.4-fpm-alpine
