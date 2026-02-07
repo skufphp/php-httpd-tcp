@@ -6,8 +6,6 @@ services:
       dockerfile: php.Dockerfile
     container_name: php-httpd-tcp
     restart: unless-stopped
-    env_file:
-      - env/.env
     volumes:
       - ./public:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini:ro
@@ -26,7 +24,7 @@ services:
     container_name: httpd-tcp
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${HTTPD_PORT}:80"
     volumes:
       - ./public:/var/www/html
       - ./docker/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
@@ -47,10 +45,10 @@ services:
     image: mysql:8.4
     container_name: mysql-httpd-tcp
     restart: unless-stopped
-    env_file:
-      - env/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -67,10 +65,10 @@ services:
     image: phpmyadmin
     container_name: phpmyadmin-httpd-tcp
     restart: unless-stopped
-    env_file:
-      - env/.env
+    environment:
+      PMA_HOST: ${PMA_HOST}
     ports:
-      - "8080:80"
+      - "${PHPMYADMIN_PORT}:80"
     depends_on:
       mysql-httpd-tcp:
         condition: service_healthy
