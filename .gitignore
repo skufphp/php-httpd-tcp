@@ -1,5 +1,5 @@
 # Environment files
-# env/.env
+# .env
 
 # IDE files
 .idea/
@@ -16,9 +16,6 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Docker volumes and data
-docker-compose.override.yml
 
 # Logs
 logs/*.log

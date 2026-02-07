@@ -20,6 +20,12 @@ GREEN=\033[0;32m
 RED=\033[0;31m
 NC=\033[0m # Без цвета
 
+# Сервисы
+PHP_CONTAINER=php-httpd-tcp
+HTTPD_CONTAINER=httpd-tcp
+MYSQL_CONTAINER=mysql-httpd-tcp
+PHPMYADMIN_CONTAINER=phpmyadmin-httpd-tcp
+
 # По умолчанию показываем справку
 help: ## Показать справку по командам
 	@echo "$(YELLOW)PHP-Httpd-TCP Development Environment$(NC)"
@@ -37,10 +43,9 @@ check-files: ## Проверить наличие всех необходимы�
 	@echo "$(YELLOW)Проверка файлов конфигурации...$(NC)"
 	@test -f docker-compose.yml || (echo "$(RED)✗ docker-compose.yml не найден$(NC)" && exit 1)
 	@test -f docker-compose.xdebug.yml || (echo "$(RED)✗ docker-compose.xdebug.yml не найден$(NC)" && exit 1)
-	@test -f env/.env || (echo "$(RED)✗ env/.env не найден$(NC)" && exit 1)
 	@test -f docker/php.Dockerfile || (echo "$(RED)✗ docker/php.Dockerfile не найден$(NC)" && exit 1)
-	@test -f config/httpd/httpd.conf || (echo "$(RED)✗ config/httpd/httpd.conf не найден$(NC)" && exit 1)
-	@test -f config/php/php.ini || (echo "$(RED)✗ config/php/php.ini не найден$(NC)" && exit 1)
+	@test -f docker/httpd/httpd.conf || (echo "$(RED)✗ config/httpd/httpd.conf не найден$(NC)" && exit 1)
+	@test -f docker/php/php.ini || (echo "$(RED)✗ config/php/php.ini не найден$(NC)" && exit 1)
 	@test -d public/ || (echo "$(RED)✗ директория public/ не найдена$(NC)" && exit 1)
 	@echo "$(GREEN)✓ Все файлы на месте$(NC)"
 
@@ -89,29 +94,30 @@ logs: ## Просмотр логов всех сервисов
 	docker compose logs -f
 
 logs-php: ## Просмотр логов PHP-FPM
-	docker compose logs -f php-httpd-tcp
+	docker compose logs -f $(PHP_CONTAINER)
 
 logs-httpd: ## Просмотр логов Apache
-	docker compose logs -f httpd-tcp
+	docker compose logs -f $(HTTPD_CONTAINER)
 
 logs-mysql: ## Просмотр логов MySQL
-	docker compose logs -f mysql-httpd-tcp
+	docker compose logs -f $(MYSQL_CONTAINER)
 
 logs-phpmyadmin: ## Просмотр логов phpMyAdmin
-	docker compose logs -f phpmyadmin-httpd-tcp
+	docker compose logs -f $(PHPMYADMIN_CONTAINER)
 
 status: ## Показать статус контейнеров
 	@echo "$(YELLOW)Статус контейнеров:$(NC)"
 	@docker compose ps
 
 shell-php: ## Подключиться к контейнеру PHP
-	docker compose exec php-httpd-tcp sh
+	docker compose exec $(PHP_CONTAINER) sh
 
 shell-httpd: ## Подключиться к контейнеру Apache
-	docker compose exec httpd-tcp sh
+	docker compose exec $(HTTPD_CONTAINER) sh
 
 shell-mysql: ## Подключиться к MySQL CLI
-	docker compose exec mysql-httpd-tcp mysql -u root -p
+	@echo "$(YELLOW)Подключение к MySQL...$(NC)"
+	docker compose exec $(MYSQL_CONTAINER) mysql -u root -p
 
 info: ## Показать информацию о проекте
 	@echo "$(YELLOW)PHP-Httpd-TCP Development Environment$(NC)"
@@ -124,9 +130,9 @@ info: ## Показать информацию о проекте
 	@echo ""
 	@echo "$(GREEN)Структура:$(NC)"
 	@echo "  • public/           - публичные файлы (DocumentRoot)"
-	@echo "  • config/httpd/    - конфигурация Apache"
-	@echo "  • config/php/       - конфигурация PHP (php.ini)"
-	@echo "  • env/.env          - переменные окружения"
+	@echo "  • docker/httpd/    - конфигурация Apache"
+	@echo "  • docker/php/       - конфигурация PHP (php.ini)"
+	@echo "  • .env          - переменные окружения"
 	@echo ""
 	@echo "$(GREEN)Порты:$(NC)"
 	@echo "  • 80   - Apache HTTP Server"
@@ -165,13 +171,13 @@ permissions: ## Исправить права доступа к файлам п�
 
 # Composer команды
 composer-install: ## Установить зависимости через Composer
-	docker compose exec php-httpd-tcp composer install
+	docker compose exec $(PHP_CONTAINER) composer install
 
 composer-update: ## Обновить зависимости через Composer
-	docker compose exec php-httpd-tcp composer update
+	docker compose exec $(PHP_CONTAINER) composer update
 
 composer-require: ## Установить пакет через Composer (make composer-require PACKAGE=vendor/package)
-	docker compose exec php-httpd-tcp composer require $(PACKAGE)
+	docker compose exec $(PHP_CONTAINER) composer require $(PACKAGE)
 
 # Команда по умолчанию
 .DEFAULT_GOAL := help
