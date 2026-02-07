@@ -26,18 +26,16 @@
 php-httpd-tcp/
 ├── Makefile
 ├── README.md
-├── config/
+├── .env.example
+├── .env                        # Ваши локальные переменные окружения
+├── docker/
 │   ├── httpd/
 │   │   └── httpd.conf          # Конфиг Apache (проксирование в PHP-FPM)
-│   └── php/
-│       └── php.ini             # Конфиг PHP (dev-настройки + Xdebug через env)
-├── docker/
+│   ├── php/
+│   │   └── php.ini             # Конфиг PHP (dev-настройки + Xdebug через env)
 │   └── php.Dockerfile          # Образ PHP-FPM 8.4 (Alpine) + расширения + Xdebug + Composer
 ├── docker-compose.yml          # Основной стек: PHP-FPM, Apache, MySQL, phpMyAdmin
 ├── docker-compose.xdebug.yml   # Оверлей для включения Xdebug (mode=start)
-├── env/
-│   ├── .env.example            # Пример переменных окружения (скопируйте в env/.env)
-│   └── .env                    # Ваши локальные переменные окружения
 └── public/                     # DocumentRoot (будет смонтирован в Apache и PHP-FPM)
     ├── index.html
     ├── index.php
@@ -55,7 +53,7 @@ php-httpd-tcp/
 Шаги:
 1) Клонируйте репозиторий и перейдите в каталог проекта.
 2) Скопируйте пример env:
-   - mkdir -p env && cp env/.env.example env/.env
+   - cp .env.example .env
    - при необходимости отредактируйте пароли/имена БД.
 3) Запустите стек:
    - make up (или docker compose up -d)
@@ -72,28 +70,28 @@ php-httpd-tcp/
 
 ## Конфигурация
 
-PHP (config/php/php.ini):
+PHP (docker/php/php.ini):
 - error_reporting=E_ALL, display_errors=On — удобно учиться на ошибках
 - memory_limit=256M, upload_max_filesize=20M, post_max_size=20M
 - opcache включён, validate_timestamps=1 (код обновляется сразу)
 - Xdebug управляется через переменные окружения (см. ниже)
 
-Apache (config/httpd/httpd.conf):
+Apache (docker/httpd/httpd.conf):
 - mod_proxy_fcgi проксирует .php в php-httpd-tcp:9000
-- AllowOverride All в /var/www/html — можно использовать .htaccess (например, mod_rewrite)
+- AllowOverride None в /var/www/html — .htaccess отключён (для простоты и скорости)
 
 Docker-образ PHP (docker/php.Dockerfile):
 - База: php:8.4-fpm-alpine
 - Установлены расширения: pdo, pdo_mysql, mysqli, mbstring, xml, gd, bcmath, zip
 - Установлен Xdebug (через pecl), Composer, fcgi (для healthcheck)
 
-## Переменные окружения (env/.env)
+## Переменные окружения (.env)
 
-Минимальный набор (см. env/.env.example):
+Минимальный набор (см. .env.example):
 - MYSQL_ROOT_PASSWORD — пароль root для MySQL
-- MYSQL_DATABASE — имя создаваемой БД
-- MYSQL_USER, MYSQL_PASSWORD — пользователь и его пароль
-- PMA_HOST=mysql-httpd-tcp, PMA_ARBITRARY=1 — для phpMyAdmin
+- PMA_HOST=mysql-httpd-tcp — хост БД для phpMyAdmin
+- HTTPD_PORT, MYSQL_PORT, PHPMYADMIN_PORT — порты сервисов
+- XDEBUG_MODE, XDEBUG_START, XDEBUG_CLIENT_HOST — опционально для Xdebug
 
 ## Xdebug: как включить
 
@@ -104,9 +102,10 @@ Docker-образ PHP (docker/php.Dockerfile):
   (эквивалент docker compose -f docker-compose.yml -f docker-compose.xdebug.yml up -d)
 - Внутри php.ini используются переменные XDEBUG_MODE=debug и XDEBUG_START=yes.
 
-Вариант B: задать переменные в env/.env и перезапустить php-контейнер
+Вариант B: задать переменные в .env и перезапустить php-контейнер
 - XDEBUG_MODE=debug
 - XDEBUG_START=yes
+- XDEBUG_CLIENT_HOST=host.docker.internal
 - затем docker compose up -d --no-deps php-httpd-tcp
 
 IDE: подключение по Xdebug 3 на порт 9003, client_host=host.docker.internal.
@@ -114,7 +113,7 @@ IDE: подключение по Xdebug 3 на порт 9003, client_host=host.d
 ## Рабочие директории и монтирование
 
 - public/ монтируется в /var/www/html одновременно в PHP-FPM и Apache — любые изменения видны сразу.
-- config/php/php.ini монтируется в /usr/local/etc/php/conf.d/local.ini (только чтение).
+- docker/php/php.ini монтируется в /usr/local/etc/php/conf.d/local.ini (только чтение).
 - Для MySQL используется именованный том mysql-data (персистентные данные).
 
 ## Подключение к MySQL из PHP (пример)

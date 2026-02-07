@@ -44,8 +44,8 @@ check-files: ## Проверить наличие всех необходимы�
 	@test -f docker-compose.yml || (echo "$(RED)✗ docker-compose.yml не найден$(NC)" && exit 1)
 	@test -f docker-compose.xdebug.yml || (echo "$(RED)✗ docker-compose.xdebug.yml не найден$(NC)" && exit 1)
 	@test -f docker/php.Dockerfile || (echo "$(RED)✗ docker/php.Dockerfile не найден$(NC)" && exit 1)
-	@test -f docker/httpd/httpd.conf || (echo "$(RED)✗ config/httpd/httpd.conf не найден$(NC)" && exit 1)
-	@test -f docker/php/php.ini || (echo "$(RED)✗ config/php/php.ini не найден$(NC)" && exit 1)
+	@test -f docker/httpd/httpd.conf || (echo "$(RED)✗ docker/httpd/httpd.conf не найден$(NC)" && exit 1)
+	@test -f docker/php/php.ini || (echo "$(RED)✗ docker/php/php.ini не найден$(NC)" && exit 1)
 	@test -d public/ || (echo "$(RED)✗ директория public/ не найдена$(NC)" && exit 1)
 	@echo "$(GREEN)✓ Все файлы на месте$(NC)"
 
