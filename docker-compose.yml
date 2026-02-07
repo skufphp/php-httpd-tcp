@@ -10,7 +10,7 @@ services:
       - env/.env
     volumes:
       - ./public:/var/www/html
-      - ./config/php/php.ini:/usr/local/etc/php/conf.d/local.ini:ro
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini:ro
     networks:
       - php-httpd-tcp-network
     healthcheck:
@@ -29,7 +29,7 @@ services:
       - "80:80"
     volumes:
       - ./public:/var/www/html
-      - ./config/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./docker/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
     networks:
       - php-httpd-tcp-network
     healthcheck:
