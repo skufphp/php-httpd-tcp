@@ -60,7 +60,7 @@ services:
       retries: 10
       start_period: 20s
 
-    # phpMyAdmin
+  # phpMyAdmin
   phpmyadmin-httpd-tcp:
     image: phpmyadmin
     container_name: phpmyadmin-httpd-tcp

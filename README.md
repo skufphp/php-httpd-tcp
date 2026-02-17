@@ -1,152 +1,124 @@
-# PHP-Httpd-TCP — учебный стек на Docker (современная замена XAMPP/MAMP/Open Server)
+# PHP-Httpd-TCP: Учебный стек на Docker
 
-Простая, воспроизводимая и «говорящая» среда для изучения PHP и его экосистемы. Стек собирается из контейнеров Docker и предназначен для локальных экспериментов.
+Простая и «говорящая» среда для изучения PHP и его экосистемы. Стек использует **TCP-соединение** (через порт 9000) для связи между Apache (Httpd) и PHP-FPM, что является надежным и классическим способом настройки Docker-контейнеров.
 
-Важное: этот проект предназначен исключительно для обучения, практики и ознакомления. Не используйте его в проде.
+> **Важно:** Проект предназначен исключительно для обучения и локальной разработки. Не используйте его в промышленной эксплуатации (Production).
 
-## Что внутри (архитектура)
+---
 
-Сервисы docker-compose.yml:
-- PHP-FPM 8.4 (контейнер php-httpd-tcp) — выполняет PHP, порт 9000 (внутренний), Xdebug установлен, управляется переменными окружения.
-- Apache HTTP Server 2.4 (контейнер httpd-tcp) — отдаёт статику и проксирует .php в PHP-FPM; доступен на http://localhost:80.
-- MySQL 8.4 (контейнер mysql-httpd-tcp) — база данных на localhost:3306, данные в именованном томе mysql-data.
-- phpMyAdmin (контейнер phpmyadmin-httpd-tcp) — веб-интерфейс MySQL на http://localhost:8080.
+## 🚀 Что внутри (Архитектура)
 
-Здоровье (healthchecks):
-- PHP-FPM — проверка fastcgi (cgi-fcgi -connect localhost:9000).
-- Apache — HTTP-запрос к http://localhost/.
-- MySQL — mysqladmin ping.
-- phpMyAdmin — HTTP-запрос к http://localhost/.
+Стек состоит из четырех основных сервисов, описанных в `docker-compose.yml`:
 
-Порядок старта: httpd-tcp ожидает, когда php-httpd-tcp станет healthy.
+1.  **PHP-FPM 8.4** (`php-httpd-tcp`):
+    *   Базируется на Alpine Linux.
+    *   Слушает входящие FastCGI-запросы на порту **9000**.
+    *   Укомплектован расширениями: PDO, MySQLi, GD, MBString, Zip и др.
+    *   Включает **Xdebug 3** (настройка через `.env`) и **Composer** для управления зависимостями.
+2.  **Apache HTTP Server 2.4** (`httpd-tcp`):
+    *   Выступает в роли веб-сервера.
+    *   Проксирует запросы к PHP через TCP на `php-httpd-tcp:9000` используя модуль `proxy_fcgi`.
+    *   Настроен на работу с `index.php` как точкой входа.
+3.  **MySQL 8.4** (`mysql-httpd-tcp`):
+    *   Реляционная база данных.
+    *   Данные сохраняются в именованном томе `mysql-data`.
+4.  **phpMyAdmin** (`phpmyadmin-httpd-tcp`):
+    *   Удобный веб-интерфейс для управления базой данных MySQL.
+    *   Доступен по порту, указанному в `.env` (по умолчанию [http://localhost:8080](http://localhost:8080)).
 
-## Структура репозитория (актуальная)
+---
 
-```
+## 📂 Структура проекта
+
+```text
 php-httpd-tcp/
-├── Makefile
-├── README.md
-├── .env.example
-├── .env                        # Ваши локальные переменные окружения
 ├── docker/
 │   ├── httpd/
-│   │   ├── httpd.conf          # Конфиг Apache (проксирование в PHP-FPM)
-│   │   ├── httpd.framework.conf # Альтернативный конфиг (Single Entry Point)
-│   │   └── httpd.proxypass.conf # Legacy-конфиг (ProxyPassMatch)
+│   │   └── conf/
+│   │       └── httpd.conf      # Конфигурация веб-сервера Apache
 │   ├── php/
-│   │   └── php.ini             # Конфиг PHP (dev-настройки + Xdebug через env)
-│   └── php.Dockerfile          # Образ PHP-FPM 8.4 (Alpine) + расширения + Xdebug + Composer
-├── docker-compose.yml          # Основной стек: PHP-FPM, Apache, MySQL, phpMyAdmin
-├── docker-compose.xdebug.yml   # Оверлей для включения Xdebug (mode=start)
-└── public/                     # DocumentRoot (будет смонтирован в Apache и PHP-FPM)
-    ├── index.html
-    ├── index.php
-    └── phpinfo.php
+│   │   └── php.ini             # Настройки PHP (ошибки, лимиты, Xdebug)
+│   └── php.Dockerfile          # Инструкции сборки образа PHP-FPM
+├── public/                     # Корень сайта (DocumentRoot)
+│   ├── index.php               # Точка входа в приложение
+│   └── phpinfo.php             # Проверка настроек PHP
+├── docker-compose.yml          # Описание всей инфраструктуры
+├── docker-compose.xdebug.yml   # Дополнение для активации Xdebug
+├── Makefile                    # Команды для быстрого управления проектом
+├── .env.example                # Образец переменных окружения
+└── README.md                   # Эта справка
 ```
 
-Обратите внимание: папки src/ и logs/ в данном репозитории отсутствуют. Для обучения достаточно размещать PHP-файлы в public/.
+---
 
-## Быстрый старт
+## 🛠 Быстрый старт
 
-Предпосылки:
-- Docker 20.10+
-- Docker Compose v2+
+### 1. Подготовка
 
-Шаги:
-1) Клонируйте репозиторий и перейдите в каталог проекта.
-2) Скопируйте пример env:
-   - cp .env.example .env
-   - при необходимости отредактируйте пароли/имена БД.
-3) Запустите стек:
-   - make up (или docker compose up -d)
-4) Проверьте доступность:
-   - Web: http://localhost
-   - phpMyAdmin: http://localhost:8080 (сервер mysql-httpd-tcp)
-   - MySQL: localhost:3306
+Убедитесь, что у вас установлены **Docker** и **Docker Compose**.
 
-Полезные команды Makefile:
-- make up / make down / make restart — управление стеком
-- make logs / make status — логи и статусы контейнеров
-- make xdebug-up / make xdebug-down — запуск/остановка стека с включённым Xdebug
-- make check-files — проверить, что все нужные файлы на месте
+### 2. Настройка окружения
 
-## Конфигурация
+Создайте файл `.env` на основе примера:
 
-PHP (docker/php/php.ini):
-- error_reporting=E_ALL, display_errors=On — удобно учиться на ошибках
-- memory_limit=256M, upload_max_filesize=20M, post_max_size=20M
-- opcache включён, validate_timestamps=1 (код обновляется сразу)
-- Xdebug управляется через переменные окружения (см. ниже)
-
-Apache (docker/httpd/httpd.conf):
-- mod_proxy_fcgi проксирует .php в php-httpd-tcp:9000
-- AllowOverride None в /var/www/html — .htaccess отключён (для простоты и скорости)
-
-Альтернативные конфиги Apache (docker/httpd/):
-- httpd.framework.conf — режим Single Entry Point для фреймворков
-- httpd.proxypass.conf — legacy-режим через ProxyPassMatch
-
-Docker-образ PHP (docker/php.Dockerfile):
-- База: php:8.4-fpm-alpine
-- Установлены расширения: pdo, pdo_mysql, mysqli, mbstring, xml, gd, bcmath, zip
-- Установлен Xdebug (через pecl), Composer, fcgi (для healthcheck)
-
-## Переменные окружения (.env)
-
-Минимальный набор (см. .env.example):
-- MYSQL_ROOT_PASSWORD — пароль root для MySQL
-- PMA_HOST=mysql-httpd-tcp — хост БД для phpMyAdmin
-- HTTPD_PORT, MYSQL_PORT, PHPMYADMIN_PORT — порты сервисов
-- XDEBUG_MODE, XDEBUG_START, XDEBUG_CLIENT_HOST — опционально для Xdebug
-
-## Xdebug: как включить
-
-По умолчанию Xdebug установлен, но выключен (переменные не заданы). Включить можно двумя способами:
-
-Вариант A: оверлейный compose-файл
-- make xdebug-up
-  (эквивалент docker compose -f docker-compose.yml -f docker-compose.xdebug.yml up -d)
-- Внутри php.ini используются переменные XDEBUG_MODE=debug и XDEBUG_START=yes.
-
-Вариант B: задать переменные в .env и перезапустить php-контейнер
-- XDEBUG_MODE=debug
-- XDEBUG_START=yes
-- XDEBUG_CLIENT_HOST=host.docker.internal
-- затем docker compose up -d --no-deps php-httpd-tcp
-
-IDE: подключение по Xdebug 3 на порт 9003, client_host=host.docker.internal.
-
-## Рабочие директории и монтирование
-
-- public/ монтируется в /var/www/html одновременно в PHP-FPM и Apache — любые изменения видны сразу.
-- docker/php/php.ini монтируется в /usr/local/etc/php/conf.d/local.ini (только чтение).
-- Для MySQL используется именованный том mysql-data (персистентные данные).
-
-## Подключение к MySQL из PHP (пример)
-
-```
-<?php
-$host = 'mysql-httpd-tcp';
-$dbname = 'your-db-name';
-$user = 'your-user';
-$pass = 'your-user-password';
-$pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
+```bash
+cp .env.example .env
 ```
 
-## Решение проблем
+*В этом файле можно изменить пароль к БД или порты, если они заняты.*
 
-Порты заняты:
-- Измените привязку в docker-compose.yml, например 8080:80 для Apache.
+### 3. Запуск
 
-Контейнеры не стартуют по порядку:
-- Проверьте healthchecks командой docker compose ps; httpd-tcp зависит от healthy php-httpd-tcp.
+Используйте `Makefile` для удобства:
 
-Xdebug не подключается:
-- Проверьте, что используете порт 9003 в IDE, и что XDEBUG_MODE/START заданы (compose.xdebug.yml или env/.env).
+```bash
+make up
+```
 
-Полная очистка и пересборка:
-- make clean или make clean-all; затем make rebuild и make up.
+*Эта команда проверит конфиги и запустит все контейнеры.*
 
-## Дисклеймер
+### 4. Проверка
 
-Проект создан для обучения и экспериментов с PHP-стеком. Не предназначен для production-использования или оценки производительности.
+*   **Сайт:** [http://localhost](http://localhost) (или порт `HTTPD_PORT` из `.env`)
+*   **База данных (PMA):** [http://localhost:8080](http://localhost:8080) (или порт `PHPMYADMIN_PORT` из `.env`)
+*   **PHP Info:** [http://localhost/phpinfo.php](http://localhost/phpinfo.php)
+
+---
+
+## 🐞 Отладка с Xdebug
+
+Xdebug уже установлен, но по умолчанию работает в пассивном режиме. Все параметры (режим, хост) вынесены в файл `.env`.
+
+1.  Убедитесь, что в `.env` установлены нужные значения (напр. `XDEBUG_MODE=debug`).
+2.  Запустите стек специальной командой:
+    ```bash
+    make xdebug-up
+    ```
+3.  Настройте вашу IDE (например, PhpStorm или VS Code) на прослушивание порта **9003**.
+4.  Для выключения отладки выполните `make xdebug-down`.
+
+---
+
+## ⌨️ Полезные команды (Makefile)
+
+*   `make up` / `make down` — запуск и остановка проекта.
+*   `make restart` / `make rebuild` — перезапуск или полная пересборка.
+*   `make info` — показать текущие порты и статус среды.
+*   `make status` — список запущенных контейнеров.
+*   `make test` — быстрая проверка доступности HTTP-сервисов.
+*   `make logs` — просмотр логов всех контейнеров.
+*   `make shell-php` / `make shell-mysql` — доступ к терминалу PHP или консоли MySQL.
+*   `make composer-install` — установка зависимостей проекта.
+*   `make clean-all` — полная очистка (удаление образов и данных БД).
+
+---
+
+## 🎓 Почему TCP?
+
+В Docker-среде TCP-соединение является стандартом "де-факто" для связи между контейнерами:
+
+1.  **Простота:** Контейнеры общаются через внутреннюю сеть Docker по именам сервисов.
+2.  **Масштабируемость:** Легко разнести Apache и PHP на разные серверы или масштабировать PHP-контейнеры.
+3.  **Совместимость:** Работает "из коробки" на всех операционных системах без дополнительных настроек прав доступа к файлам сокетов.
+
+Связь реализована через внутреннюю сеть Docker, где Apache обращается к PHP по адресу `php-httpd-tcp:9000`.
