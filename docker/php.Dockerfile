@@ -29,11 +29,14 @@ RUN apk add --no-cache \
     zip \
     && apk del $PHPIZE_DEPS
 
-# Устанавливаем Composer
+# Установка Composer (менеджер зависимостей PHP)
+# Копируем бинарный файл из официального Docker-образа Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Устанавливаем рабочую директорию
 WORKDIR /var/www/html
+
+# Установка прав доступа (PHP-FPM в Alpine по умолчанию работает от www-data)
 RUN chown -R www-data:www-data /var/www/html
 
 # Экспонируем порт
